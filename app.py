@@ -2,7 +2,8 @@ import os
 import json
 import random
 from flask import Flask, request, make_response
-import defusedxml.ElementTree as ET
+import xml.etree.ElementTree as ET
+import defusedxml.ElementTree as defused_ET
 from threading import Lock
 
 app = Flask(__name__)
@@ -110,7 +111,7 @@ def success_xml(message):
 def parse_xml_request(data):
     """Parses incoming request XML safely using defusedxml."""
     try:
-        root = ET.fromstring(data)
+        root = defused_ET.fromstring(data)
         parsed_dict = {}
         for child in root:
             key = child.tag.lower()
@@ -120,7 +121,7 @@ def parse_xml_request(data):
             else:
                 parsed_dict[key] = val
         return parsed_dict, None
-    except ET.ParseError:
+    except defused_ET.ParseError:
         return None, "Malformed XML payload."
     except Exception as e:
         return None, str(e)
@@ -131,9 +132,7 @@ def parse_xml_request(data):
 @app.route('/employees', methods=['GET'])
 def get_employees():
     """Retrieve all employees in XML format."""
-    # Support query parameter filtering (e.g., /employees?department=Engineering)
     dept_filter = request.args.get('department')
-    
     employees = load_employees()
     
     if dept_filter:
@@ -251,5 +250,4 @@ def health():
     return make_xml_response(root)
 
 if __name__ == '__main__':
-    # Start local server
     app.run(host='0.0.0.0', port=5000, debug=True)
